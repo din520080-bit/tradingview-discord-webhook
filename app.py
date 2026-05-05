@@ -5,7 +5,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# 從環境變數讀取 Discord Webhook URL (稍後會設定)
+# 從環境變數讀取 Discord Webhook URL
 DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL', '')
 
 @app.route('/', methods=['GET'])
@@ -30,21 +30,27 @@ def tradingview_alert():
         now = datetime.utcnow()
         taiwan_time = now.strftime('%Y-%m-%d %H:%M:%S')
         
-        # 判斷訊號類型並加上表情符號
-        if '多頭排列' in message or 'Buy' in message or '↑' in message:
+        # 判斷訊號類型
+        # 多頭相關訊號 (排列 + 貫穿) 都會 @everyone
+        if '多頭排列' in message or 'Buy' in message or '貫穿↑' in message or '貫穿多頭' in message:
             emoji = '🟢'
             color = 3066993  # 綠色
-        elif '空頭排列' in message or 'Sell' in message or '↓' in message:
+            mention = '@everyone'  # 標記所有人
+        # 空頭相關訊號 (排列 + 貫穿) 都會 @everyone
+        elif '空頭排列' in message or 'Sell' in message or '貫穿↓' in message or '貫穿空頭' in message:
             emoji = '🔴'
             color = 15158332  # 紅色
+            mention = '@everyone'  # 標記所有人
         else:
             emoji = '⚪'
             color = 3447003  # 藍色
+            mention = '@everyone'  # 其他訊號也標記
         
-        # 建立 Discord 訊息 (使用 Embed 格式,更美觀)
+        # 建立 Discord 訊息
         discord_payload = {
+            "content": mention,  # @everyone
             "username": "鈔人不會飛",
-            "avatar_url": "https://i.imgur.com/4M34hi2.png",  # 可換成你的圖示
+            "avatar_url": "https://i.imgur.com/4M34hi2.png",
             "embeds": [{
                 "title": f"{emoji} 交易訊號",
                 "description": f"```{message}```",
@@ -52,7 +58,10 @@ def tradingview_alert():
                 "footer": {
                     "text": f"時間: {taiwan_time} UTC"
                 }
-            }]
+            }],
+            "allowed_mentions": {
+                "parse": ["everyone"]  # 允許標記 @everyone
+            }
         }
         
         # 發送到 Discord
@@ -71,17 +80,49 @@ def tradingview_alert():
 
 @app.route('/test', methods=['GET'])
 def test():
-    """測試用路徑"""
-    test_message = "🧪 測試訊號 - 伺服器運作正常!"
+    """測試用路徑 - 模擬多頭排列訊號"""
+    test_message = "多頭排列出現 (EMA20>EMA60>EMA240)"
     
     discord_payload = {
+        "content": "@everyone",
         "username": "鈔人不會飛",
-        "content": test_message
+        "embeds": [{
+            "title": "🟢 交易訊號",
+            "description": f"```{test_message}```",
+            "color": 3066993
+        }],
+        "allowed_mentions": {
+            "parse": ["everyone"]
+        }
     }
     
     if DISCORD_WEBHOOK_URL:
         requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
-        return "測試訊息已發送到 Discord!", 200
+        return "測試訊息已發送 (多頭排列 - 會 @everyone)!", 200
+    else:
+        return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
+
+@app.route('/test-cross', methods=['GET'])
+def test_cross():
+    """測試用路徑 - 模擬貫穿訊號"""
+    test_message = "EMA20+EMA60 即時貫穿 EMA240 (多頭)"
+    
+    discord_payload = {
+        "content": "@everyone",
+        "username": "鈔人不會飛",
+        "embeds": [{
+            "title": "🟢 交易訊號",
+            "description": f"```{test_message}```",
+            "color": 3066993
+        }],
+        "allowed_mentions": {
+            "parse": ["everyone"]
+        }
+    }
+    
+    if DISCORD_WEBHOOK_URL:
+        requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
+        return "測試訊息已發送 (貫穿訊號 - 會 @everyone)!", 200
     else:
         return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
 
