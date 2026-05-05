@@ -26,43 +26,107 @@ def tradingview_alert():
         # TradingView 可能直接傳文字或 JSON
         message = data.get('message', raw_data) if data else raw_data
         
-        # 取得當前時間 (台灣時區)
-        now = datetime.utcnow()
+        # 取得當前時間 (台灣時區 +8)
+        from datetime import timedelta
+        now = datetime.utcnow() + timedelta(hours=8)
         taiwan_time = now.strftime('%Y-%m-%d %H:%M:%S')
         
-        # 判斷訊號類型
-        # 多頭相關訊號 (排列 + 貫穿) 都會 @everyone
-        if '多頭排列' in message or 'Buy' in message or '貫穿↑' in message or '貫穿多頭' in message:
-            emoji = '🟢'
+        # 判斷訊號類型並設定樣式
+        if '多頭排列' in message:
+            # 多頭排列訊號
+            title = "🚀 多頭排列訊號 🚀"
+            description = f"""```
+═══════════════════════════
+📈 上漲趨勢確認 📈
+───────────────────────────
+訊號: 多頭排列出現
+排列: EMA20 > EMA60 > EMA240
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```"""
             color = 3066993  # 綠色
-            mention = '@everyone'  # 標記所有人
-        # 空頭相關訊號 (排列 + 貫穿) 都會 @everyone
-        elif '空頭排列' in message or 'Sell' in message or '貫穿↓' in message or '貫穿空頭' in message:
-            emoji = '🔴'
+            thumbnail = "https://i.imgur.com/qxz0g5h.png"  # 上漲圖示
+            
+        elif '空頭排列' in message:
+            # 空頭排列訊號
+            title = "📉 空頭排列訊號 📉"
+            description = f"""```
+═══════════════════════════
+📉 下跌趨勢確認 📉
+───────────────────────────
+訊號: 空頭排列出現
+排列: EMA20 < EMA60 < EMA240
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```"""
             color = 15158332  # 紅色
-            mention = '@everyone'  # 標記所有人
+            thumbnail = "https://i.imgur.com/3xqJGfP.png"  # 下跌圖示
+            
+        elif '貫穿多頭' in message or '貫穿↑' in message or 'Buy' in message:
+            # 多頭貫穿訊號
+            title = "⚡ 多頭貫穿訊號 ⚡"
+            description = f"""```
+═══════════════════════════
+⚡📈 突破上漲訊號 📈⚡
+───────────────────────────
+訊號: EMA20+60 貫穿 EMA240
+方向: 向上突破 ↑↑↑
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```"""
+            color = 3066993  # 綠色
+            thumbnail = "https://i.imgur.com/qxz0g5h.png"  # 上漲圖示
+            
+        elif '貫穿空頭' in message or '貫穿↓' in message or 'Sell' in message:
+            # 空頭貫穿訊號
+            title = "⚡ 空頭貫穿訊號 ⚡"
+            description = f"""```
+═══════════════════════════
+⚡📉 突破下跌訊號 📉⚡
+───────────────────────────
+訊號: EMA20+60 貫穿 EMA240
+方向: 向下突破 ↓↓↓
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```"""
+            color = 15158332  # 紅色
+            thumbnail = "https://i.imgur.com/3xqJGfP.png"  # 下跌圖示
+            
         else:
-            emoji = '⚪'
+            # 其他訊號
+            title = "📊 交易訊號"
+            description = f"""```
+═══════════════════════════
+{message}
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```"""
             color = 3447003  # 藍色
-            mention = '@everyone'  # 其他訊號也標記
+            thumbnail = None
         
-        # 建立 Discord 訊息
+        # 建立 Discord 訊息 (使用 Embed 格式)
         discord_payload = {
-            "content": mention,  # @everyone
+            "content": "@everyone",  # 標記所有人
             "username": "鈔人不會飛",
             "avatar_url": "https://i.imgur.com/4M34hi2.png",
             "embeds": [{
-                "title": f"{emoji} 交易訊號",
-                "description": f"```{message}```",
+                "title": title,
+                "description": description,
                 "color": color,
+                "timestamp": datetime.utcnow().isoformat(),
                 "footer": {
-                    "text": f"時間: {taiwan_time} UTC"
+                    "text": "鈔人不會飛交易系統",
+                    "icon_url": "https://i.imgur.com/4M34hi2.png"
                 }
             }],
             "allowed_mentions": {
-                "parse": ["everyone"]  # 允許標記 @everyone
+                "parse": ["everyone"]
             }
         }
+        
+        # 如果有縮圖,加入
+        if thumbnail:
+            discord_payload["embeds"][0]["thumbnail"] = {"url": thumbnail}
         
         # 發送到 Discord
         if DISCORD_WEBHOOK_URL:
@@ -81,15 +145,32 @@ def tradingview_alert():
 @app.route('/test', methods=['GET'])
 def test():
     """測試用路徑 - 模擬多頭排列訊號"""
-    test_message = "多頭排列出現 (EMA20>EMA60>EMA240)"
+    from datetime import timedelta
+    now = datetime.utcnow() + timedelta(hours=8)
+    taiwan_time = now.strftime('%Y-%m-%d %H:%M:%S')
     
     discord_payload = {
         "content": "@everyone",
         "username": "鈔人不會飛",
+        "avatar_url": "https://i.imgur.com/4M34hi2.png",
         "embeds": [{
-            "title": "🟢 交易訊號",
-            "description": f"```{test_message}```",
-            "color": 3066993
+            "title": "🚀 多頭排列訊號 🚀",
+            "description": f"""```
+═══════════════════════════
+📈 上漲趨勢確認 📈
+───────────────────────────
+訊號: 多頭排列出現
+排列: EMA20 > EMA60 > EMA240
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```""",
+            "color": 3066993,
+            "thumbnail": {"url": "https://i.imgur.com/qxz0g5h.png"},
+            "timestamp": datetime.utcnow().isoformat(),
+            "footer": {
+                "text": "鈔人不會飛交易系統",
+                "icon_url": "https://i.imgur.com/4M34hi2.png"
+            }
         }],
         "allowed_mentions": {
             "parse": ["everyone"]
@@ -98,22 +179,39 @@ def test():
     
     if DISCORD_WEBHOOK_URL:
         requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
-        return "測試訊息已發送 (多頭排列 - 會 @everyone)!", 200
+        return "測試訊息已發送 (多頭排列 📈)!", 200
     else:
         return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
 
-@app.route('/test-cross', methods=['GET'])
-def test_cross():
-    """測試用路徑 - 模擬貫穿訊號"""
-    test_message = "EMA20+EMA60 即時貫穿 EMA240 (多頭)"
+@app.route('/test-bear', methods=['GET'])
+def test_bear():
+    """測試用路徑 - 模擬空頭排列訊號"""
+    from datetime import timedelta
+    now = datetime.utcnow() + timedelta(hours=8)
+    taiwan_time = now.strftime('%Y-%m-%d %H:%M:%S')
     
     discord_payload = {
         "content": "@everyone",
         "username": "鈔人不會飛",
+        "avatar_url": "https://i.imgur.com/4M34hi2.png",
         "embeds": [{
-            "title": "🟢 交易訊號",
-            "description": f"```{test_message}```",
-            "color": 3066993
+            "title": "📉 空頭排列訊號 📉",
+            "description": f"""```
+═══════════════════════════
+📉 下跌趨勢確認 📉
+───────────────────────────
+訊號: 空頭排列出現
+排列: EMA20 < EMA60 < EMA240
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```""",
+            "color": 15158332,
+            "thumbnail": {"url": "https://i.imgur.com/3xqJGfP.png"},
+            "timestamp": datetime.utcnow().isoformat(),
+            "footer": {
+                "text": "鈔人不會飛交易系統",
+                "icon_url": "https://i.imgur.com/4M34hi2.png"
+            }
         }],
         "allowed_mentions": {
             "parse": ["everyone"]
@@ -122,7 +220,89 @@ def test_cross():
     
     if DISCORD_WEBHOOK_URL:
         requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
-        return "測試訊息已發送 (貫穿訊號 - 會 @everyone)!", 200
+        return "測試訊息已發送 (空頭排列 📉)!", 200
+    else:
+        return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
+
+@app.route('/test-cross-bull', methods=['GET'])
+def test_cross_bull():
+    """測試用路徑 - 模擬多頭貫穿訊號"""
+    from datetime import timedelta
+    now = datetime.utcnow() + timedelta(hours=8)
+    taiwan_time = now.strftime('%Y-%m-%d %H:%M:%S')
+    
+    discord_payload = {
+        "content": "@everyone",
+        "username": "鈔人不會飛",
+        "avatar_url": "https://i.imgur.com/4M34hi2.png",
+        "embeds": [{
+            "title": "⚡ 多頭貫穿訊號 ⚡",
+            "description": f"""```
+═══════════════════════════
+⚡📈 突破上漲訊號 📈⚡
+───────────────────────────
+訊號: EMA20+60 貫穿 EMA240
+方向: 向上突破 ↑↑↑
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```""",
+            "color": 3066993,
+            "thumbnail": {"url": "https://i.imgur.com/qxz0g5h.png"},
+            "timestamp": datetime.utcnow().isoformat(),
+            "footer": {
+                "text": "鈔人不會飛交易系統",
+                "icon_url": "https://i.imgur.com/4M34hi2.png"
+            }
+        }],
+        "allowed_mentions": {
+            "parse": ["everyone"]
+        }
+    }
+    
+    if DISCORD_WEBHOOK_URL:
+        requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
+        return "測試訊息已發送 (多頭貫穿 ⚡📈)!", 200
+    else:
+        return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
+
+@app.route('/test-cross-bear', methods=['GET'])
+def test_cross_bear():
+    """測試用路徑 - 模擬空頭貫穿訊號"""
+    from datetime import timedelta
+    now = datetime.utcnow() + timedelta(hours=8)
+    taiwan_time = now.strftime('%Y-%m-%d %H:%M:%S')
+    
+    discord_payload = {
+        "content": "@everyone",
+        "username": "鈔人不會飛",
+        "avatar_url": "https://i.imgur.com/4M34hi2.png",
+        "embeds": [{
+            "title": "⚡ 空頭貫穿訊號 ⚡",
+            "description": f"""```
+═══════════════════════════
+⚡📉 突破下跌訊號 📉⚡
+───────────────────────────
+訊號: EMA20+60 貫穿 EMA240
+方向: 向下突破 ↓↓↓
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```""",
+            "color": 15158332,
+            "thumbnail": {"url": "https://i.imgur.com/3xqJGfP.png"},
+            "timestamp": datetime.utcnow().isoformat(),
+            "footer": {
+                "text": "鈔人不會飛交易系統",
+                "icon_url": "https://i.imgur.com/4M34hi2.png"
+            }
+        }],
+        "allowed_mentions": {
+            "parse": ["everyone"]
+        }
+    }
+    
+    if DISCORD_WEBHOOK_URL:
+        requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
+        return "測試訊息已發送 (空頭貫穿 ⚡📉)!", 200
     else:
         return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
 
