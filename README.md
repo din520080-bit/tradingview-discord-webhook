@@ -1,0 +1,1 @@
+# tradingview-discord-webhook
