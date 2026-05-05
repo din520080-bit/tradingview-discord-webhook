@@ -45,7 +45,6 @@ def tradingview_alert():
 ═══════════════════════════
 ```"""
             color = 3066993  # 綠色
-            thumbnail = "https://i.imgur.com/qxz0g5h.png"  # 上漲圖示
             
         elif '空頭排列' in message:
             # 空頭排列訊號
@@ -60,7 +59,6 @@ def tradingview_alert():
 ═══════════════════════════
 ```"""
             color = 15158332  # 紅色
-            thumbnail = "https://i.imgur.com/3xqJGfP.png"  # 下跌圖示
             
         elif '貫穿多頭' in message or '貫穿↑' in message or 'Buy' in message:
             # 多頭貫穿訊號
@@ -75,7 +73,6 @@ def tradingview_alert():
 ═══════════════════════════
 ```"""
             color = 3066993  # 綠色
-            thumbnail = "https://i.imgur.com/qxz0g5h.png"  # 上漲圖示
             
         elif '貫穿空頭' in message or '貫穿↓' in message or 'Sell' in message:
             # 空頭貫穿訊號
@@ -90,7 +87,6 @@ def tradingview_alert():
 ═══════════════════════════
 ```"""
             color = 15158332  # 紅色
-            thumbnail = "https://i.imgur.com/3xqJGfP.png"  # 下跌圖示
             
         else:
             # 其他訊號
@@ -102,9 +98,8 @@ def tradingview_alert():
 ═══════════════════════════
 ```"""
             color = 3447003  # 藍色
-            thumbnail = None
         
-        # 建立 Discord 訊息 (使用 Embed 格式)
+        # 建立 Discord 訊息 (使用 Embed 格式,移除 thumbnail)
         discord_payload = {
             "content": "@everyone",  # 標記所有人
             "username": "鈔人不會飛",
@@ -123,10 +118,6 @@ def tradingview_alert():
                 "parse": ["everyone"]
             }
         }
-        
-        # 如果有縮圖,加入
-        if thumbnail:
-            discord_payload["embeds"][0]["thumbnail"] = {"url": thumbnail}
         
         # 發送到 Discord
         if DISCORD_WEBHOOK_URL:
@@ -165,7 +156,6 @@ def test():
 ═══════════════════════════
 ```""",
             "color": 3066993,
-            "thumbnail": {"url": "https://i.imgur.com/qxz0g5h.png"},
             "timestamp": datetime.utcnow().isoformat(),
             "footer": {
                 "text": "鈔人不會飛交易系統",
@@ -206,7 +196,6 @@ def test_bear():
 ═══════════════════════════
 ```""",
             "color": 15158332,
-            "thumbnail": {"url": "https://i.imgur.com/3xqJGfP.png"},
             "timestamp": datetime.utcnow().isoformat(),
             "footer": {
                 "text": "鈔人不會飛交易系統",
@@ -247,7 +236,6 @@ def test_cross_bull():
 ═══════════════════════════
 ```""",
             "color": 3066993,
-            "thumbnail": {"url": "https://i.imgur.com/qxz0g5h.png"},
             "timestamp": datetime.utcnow().isoformat(),
             "footer": {
                 "text": "鈔人不會飛交易系統",
@@ -288,7 +276,6 @@ def test_cross_bear():
 ═══════════════════════════
 ```""",
             "color": 15158332,
-            "thumbnail": {"url": "https://i.imgur.com/3xqJGfP.png"},
             "timestamp": datetime.utcnow().isoformat(),
             "footer": {
                 "text": "鈔人不會飛交易系統",
