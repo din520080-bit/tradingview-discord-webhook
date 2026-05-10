@@ -218,7 +218,7 @@ def test():
     
     if DISCORD_WEBHOOK_URL:
         requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
-        return "測試訊息已發送 (含商品資訊)!", 200
+        return "✅ 測試訊息已發送 (多頭排列 - 含商品資訊)!", 200
     else:
         return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
 
@@ -262,7 +262,95 @@ def test_bear():
     
     if DISCORD_WEBHOOK_URL:
         requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
-        return "測試訊息已發送 (含商品資訊)!", 200
+        return "✅ 測試訊息已發送 (空頭排列 - 含商品資訊)!", 200
+    else:
+        return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
+
+@app.route('/test-cross-bull', methods=['GET'])
+def test_cross_bull():
+    """測試用路徑 - 模擬多頭貫穿訊號"""
+    from datetime import timedelta
+    now = datetime.utcnow() + timedelta(hours=8)
+    taiwan_time = now.strftime('%Y-%m-%d %H:%M:%S')
+    
+    discord_payload = {
+        "content": "@everyone",
+        "username": "鈔人不會飛",
+        "avatar_url": "https://i.imgur.com/4M34hi2.png",
+        "embeds": [{
+            "title": "⚡ 多頭貫穿訊號 ⚡",
+            "description": f"""```
+═══════════════════════════
+⚡📈 突破上漲訊號 📈⚡
+───────────────────────────
+🏷️ 商品: ETHUSD (測試)
+💰 價格: 3,456.78
+📊 週期: 4H
+───────────────────────────
+訊號: EMA20+60 貫穿 EMA240
+方向: 向上突破 ↑↑↑
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```""",
+            "color": 3066993,
+            "timestamp": datetime.utcnow().isoformat(),
+            "footer": {
+                "text": "鈔人不會飛交易系統 | BINANCE",
+                "icon_url": "https://i.imgur.com/4M34hi2.png"
+            }
+        }],
+        "allowed_mentions": {
+            "parse": ["everyone"]
+        }
+    }
+    
+    if DISCORD_WEBHOOK_URL:
+        requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
+        return "✅ 測試訊息已發送 (多頭貫穿 ⚡📈 - 含商品資訊)!", 200
+    else:
+        return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
+
+@app.route('/test-cross-bear', methods=['GET'])
+def test_cross_bear():
+    """測試用路徑 - 模擬空頭貫穿訊號"""
+    from datetime import timedelta
+    now = datetime.utcnow() + timedelta(hours=8)
+    taiwan_time = now.strftime('%Y-%m-%d %H:%M:%S')
+    
+    discord_payload = {
+        "content": "@everyone",
+        "username": "鈔人不會飛",
+        "avatar_url": "https://i.imgur.com/4M34hi2.png",
+        "embeds": [{
+            "title": "⚡ 空頭貫穿訊號 ⚡",
+            "description": f"""```
+═══════════════════════════
+⚡📉 突破下跌訊號 📉⚡
+───────────────────────────
+🏷️ 商品: 鴻海 2317
+💰 價格: 187.5
+📊 週期: 60分
+───────────────────────────
+訊號: EMA20+60 貫穿 EMA240
+方向: 向下突破 ↓↓↓
+⏰ 時間: {taiwan_time}
+═══════════════════════════
+```""",
+            "color": 15158332,
+            "timestamp": datetime.utcnow().isoformat(),
+            "footer": {
+                "text": "鈔人不會飛交易系統 | TWSE",
+                "icon_url": "https://i.imgur.com/4M34hi2.png"
+            }
+        }],
+        "allowed_mentions": {
+            "parse": ["everyone"]
+        }
+    }
+    
+    if DISCORD_WEBHOOK_URL:
+        requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
+        return "✅ 測試訊息已發送 (空頭貫穿 ⚡📉 - 含商品資訊)!", 200
     else:
         return "錯誤: 未設定 DISCORD_WEBHOOK_URL", 500
 
